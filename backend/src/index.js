@@ -1,28 +1,37 @@
 import express from 'express';
-import cors from 'cors';
 import dotenv from 'dotenv';
-import morgan from 'morgan';
+import cors from 'cors'; // ✅ import cors
+import connectDB from './config/db.js';
+import templateRoutes from './routes/template.route.js';
 
-// Load environment variables
 dotenv.config();
 
-// Create Express app
 const app = express();
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(morgan('dev'));
+// ✅ Enable CORS for all origins (or restrict to specific one in production)
+app.use(cors(
+  {
+    origin: 'http://localhost:5173',
+    credentials: true,
+  }
+));
 
-// Define port
+// Middlewares
+app.use(express.json()); // Parse JSON body
+app.use(express.urlencoded({ extended: true })); // Parse URL-encoded body
+
+// Routes
+app.use('/api/templates', templateRoutes);
+
+// Connect DB and Start Server
 const PORT = process.env.PORT || 5000;
 
-// Basic route
-app.get('/', (req, res) => {
-    res.json({ message: 'Thumbnail Creator API is running' });
-});
-
-// Start server
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+connectDB()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on http://localhost:${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("Server failed to start:", err);
+  });
